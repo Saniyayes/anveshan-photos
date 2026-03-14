@@ -1,683 +1,209 @@
+cat > /tmp/index.html << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Anveshan 2026 — Find Your Photos</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --card: #13131a;
-    --accent: #ff6b2b;
-    --accent2: #ffb347;
-    --text: #f0ede8;
-    --muted: #6b6878;
-    --border: rgba(255,107,43,0.2);
-    --success: #2dbd6e;
-  }
-
+  :root { --bg: #0a0a0f; --card: #13131a; --accent: #ff6b2b; --text: #f0ede8; --muted: #6b6878; --border: rgba(255,107,43,0.2); --success: #2dbd6e; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Background grain effect */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.4;
-  }
-
-  .glow-orb {
-    position: fixed;
-    width: 500px;
-    height: 500px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,107,43,0.12) 0%, transparent 70%);
-    top: -100px;
-    right: -100px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container {
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 0 20px 60px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Header */
-  header {
-    padding: 40px 0 32px;
-    text-align: center;
-  }
-
-  .fest-tag {
-    display: inline-block;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--accent);
-    border: 1px solid var(--border);
-    padding: 6px 14px;
-    border-radius: 20px;
-    margin-bottom: 16px;
-    background: rgba(255,107,43,0.06);
-  }
-
-  h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(52px, 14vw, 80px);
-    line-height: 0.9;
-    letter-spacing: 2px;
-    background: linear-gradient(135deg, var(--text) 0%, var(--accent2) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 12px;
-  }
-
-  .subtitle {
-    color: var(--muted);
-    font-size: 15px;
-    font-weight: 300;
-    line-height: 1.6;
-  }
-
-  /* Selfie Section */
-  .selfie-section {
-    margin: 32px 0;
-  }
-
-  .camera-box {
-    width: 100%;
-    aspect-ratio: 1;
-    border-radius: 24px;
-    border: 1.5px dashed var(--border);
-    background: var(--card);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .camera-box:hover {
-    border-color: var(--accent);
-    background: rgba(255,107,43,0.05);
-  }
-
-  .camera-box.has-photo {
-    border-style: solid;
-    border-color: var(--accent);
-  }
-
-  #preview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 22px;
-    display: none;
-  }
-
-  .camera-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .camera-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: rgba(255,107,43,0.1);
-    border: 1.5px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-  }
-
-  .camera-label {
-    font-size: 14px;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.5;
-  }
-
-  .camera-label strong {
-    color: var(--text);
-    font-weight: 500;
-    display: block;
-  }
-
-  #fileInput { display: none; }
-
-  .retake-btn {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(0,0,0,0.6);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: white;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    padding: 6px 12px;
-    border-radius: 20px;
-    cursor: pointer;
-    display: none;
-    backdrop-filter: blur(8px);
-  }
-
-  /* Search Button */
-  .search-btn {
-    width: 100%;
-    padding: 18px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 16px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 2px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-top: 16px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .search-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 100%);
-  }
-
-  .search-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(255,107,43,0.4);
-  }
-
-  .search-btn:active { transform: translateY(0); }
-  .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* Loading */
-  .loading {
-    display: none;
-    text-align: center;
-    padding: 48px 0;
-  }
-
-  .spinner {
-    width: 48px;
-    height: 48px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
-  }
-
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+  .container { max-width: 480px; margin: 0 auto; padding: 0 20px 60px; }
+  header { padding: 40px 0 24px; text-align: center; }
+  .fest-tag { display: inline-block; font-size: 11px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; margin-bottom: 16px; background: rgba(255,107,43,0.06); }
+  h1 { font-size: clamp(42px, 12vw, 64px); font-weight: 800; line-height: 0.95; margin-bottom: 12px; }
+  h1 span { color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .btn-group { display: flex; flex-direction: column; gap: 12px; margin: 32px 0 16px; }
+  .cam-btn { width: 100%; padding: 20px; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; }
+  .cam-btn.primary { background: var(--accent); color: white; }
+  .cam-btn.secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  #preview-box { display: none; margin: 0 0 16px; border-radius: 20px; overflow: hidden; border: 2px solid var(--accent); position: relative; }
+  #preview-box img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
+  .retake { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
+  .search-btn { width: 100%; padding: 18px; background: var(--accent); color: white; border: none; border-radius: 16px; font-size: 18px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; display: none; margin-bottom: 12px; }
+  .loading { display: none; text-align: center; padding: 48px 0; }
+  .spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .loading-text {
-    color: var(--muted);
-    font-size: 14px;
-  }
-
-  .loading-text span {
-    color: var(--accent);
-    font-weight: 500;
-  }
-
-  /* Results */
+  .loading-text { color: var(--muted); font-size: 14px; line-height: 1.8; }
   #results { display: none; }
-
-  .results-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .results-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
-    letter-spacing: 1px;
-  }
-
-  .results-count {
-    background: rgba(255,107,43,0.15);
-    color: var(--accent);
-    font-size: 13px;
-    font-weight: 500;
-    padding: 4px 12px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-  }
-
-  .photo-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .photo-card {
-    background: var(--card);
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.06);
-    animation: fadeUp 0.4s ease forwards;
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  @keyframes fadeUp {
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .photo-card img {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
-    display: block;
-  }
-
-  .photo-card-footer {
-    padding: 10px;
-  }
-
-  .download-btn {
-    width: 100%;
-    padding: 9px;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-
-  .download-btn:hover {
-    background: rgba(255,107,43,0.1);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .download-btn.downloading {
-    opacity: 0.6;
-    pointer-events: none;
-  }
-
-  .download-btn.done {
-    background: rgba(45,189,110,0.1);
-    border-color: var(--success);
-    color: var(--success);
-  }
-
-  /* No results */
-  .no-results {
-    text-align: center;
-    padding: 48px 0;
-    display: none;
-  }
-
-  .no-results-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-  }
-
-  .no-results h3 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-  }
-
-  .no-results p {
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.6;
-  }
-
-  /* Error */
-  .error-msg {
-    background: rgba(255,60,60,0.1);
-    border: 1px solid rgba(255,60,60,0.3);
-    color: #ff6060;
-    padding: 14px 16px;
-    border-radius: 12px;
-    font-size: 14px;
-    margin-top: 12px;
-    display: none;
-    line-height: 1.5;
-  }
-
-  /* Search again */
-  .search-again-btn {
-    width: 100%;
-    padding: 14px;
-    background: transparent;
-    border: 1.5px solid var(--border);
-    color: var(--text);
-    border-radius: 16px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-top: 24px;
-    transition: all 0.2s ease;
-  }
-
-  .search-again-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  /* Tips */
-  .tips {
-    margin-top: 32px;
-    padding: 20px;
-    background: var(--card);
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.06);
-  }
-
-  .tips-title {
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 12px;
-  }
-
-  .tips ul {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .tips li {
-    font-size: 13px;
-    color: var(--muted);
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    line-height: 1.5;
-  }
-
-  .tips li::before {
-    content: '→';
-    color: var(--accent);
-    flex-shrink: 0;
-  }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .results-title { font-size: 22px; font-weight: 800; }
+  .results-count { background: rgba(255,107,43,0.15); color: var(--accent); font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); }
+  .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .photo-card { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); animation: fadeUp 0.4s ease forwards; opacity: 0; transform: translateY(16px); }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .photo-card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #1a1a2e; min-height: 150px; }
+  .photo-card-footer { padding: 10px; }
+  .download-btn { width: 100%; padding: 9px; background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 10px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .download-btn.done { background: rgba(45,189,110,0.1); border-color: var(--success); color: var(--success); }
+  .no-results { text-align: center; padding: 48px 0; display: none; }
+  .no-results-icon { font-size: 48px; margin-bottom: 16px; }
+  .no-results h3 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+  .no-results p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .error-msg { background: rgba(255,60,60,0.1); border: 1px solid rgba(255,60,60,0.3); color: #ff6060; padding: 14px; border-radius: 12px; font-size: 14px; margin-top: 12px; display: none; }
+  .again-btn { width: 100%; padding: 14px; background: transparent; border: 1.5px solid var(--border); color: var(--text); border-radius: 16px; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 24px; }
+  .tips { margin-top: 24px; padding: 20px; background: var(--card); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); }
+  .tips-title { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .tips li { font-size: 13px; color: var(--muted); margin-bottom: 8px; padding-left: 16px; position: relative; line-height: 1.5; list-style: none; }
+  .tips li::before { content: '→'; color: var(--accent); position: absolute; left: 0; }
 </style>
 </head>
 <body>
-
-<div class="glow-orb"></div>
-
 <div class="container">
   <header>
     <div class="fest-tag">JSS CSE · Anveshan 2026</div>
-    <h1>FIND YOUR<br>PHOTOS</h1>
+    <h1>Find Your<br><span>Photos</span></h1>
     <p class="subtitle">Take a selfie and we'll find all your photos from the fest instantly</p>
   </header>
-
-  <!-- Selfie Section -->
-  <div class="selfie-section" id="selfieSection">
-    <div class="camera-box" id="cameraBox" onclick="triggerCamera()">
-      <img id="preview" alt="Your selfie">
-      <button class="retake-btn" id="retakeBtn" onclick="retakePhoto(event)">↺ Retake</button>
-      <div class="camera-placeholder" id="cameraPlaceholder">
-        <div class="camera-icon">📷</div>
-        <div class="camera-label">
-          <strong>Take a Selfie</strong>
-          Tap to open camera
-        </div>
-      </div>
+  <div id="mainSection">
+    <div id="preview-box">
+      <img id="preview" alt="Your photo">
+      <button class="retake" onclick="resetPhoto()">↺ Retake</button>
     </div>
-    <input type="file" id="fileInput" accept="image/*" capture="user" onchange="handlePhoto(event)">
-
-    <button class="search-btn" id="searchBtn" onclick="searchPhotos()" disabled>
-      FIND MY PHOTOS
-    </button>
+    <div class="btn-group" id="btnGroup">
+      <button class="cam-btn primary" onclick="openCamera()">📸 Open Camera</button>
+      <button class="cam-btn secondary" onclick="openGallery()">🖼 Choose from Gallery</button>
+    </div>
+    <button class="search-btn" id="searchBtn" onclick="searchPhotos()">🔍 Find My Photos</button>
     <div class="error-msg" id="errorMsg"></div>
-
     <div class="tips">
       <div class="tips-title">Tips for best results</div>
       <ul>
-        <li>Make sure your face is clearly visible</li>
-        <li>Take selfie in good lighting</li>
+        <li>Face should be clearly visible</li>
+        <li>Good lighting works best</li>
         <li>Look directly at the camera</li>
       </ul>
     </div>
   </div>
-
-  <!-- Loading -->
+  <input type="file" id="cameraInput" accept="image/*" capture="user" style="display:none" onchange="handlePhoto(event)">
+  <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handlePhoto(event)">
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <div class="loading-text">Searching through fest photos...<br><span>This may take a few seconds</span></div>
+    <div class="loading-text">Searching through fest photos...<br><span style="color:var(--accent);font-weight:600">This may take a few seconds</span></div>
   </div>
-
-  <!-- Results -->
   <div id="results">
     <div class="results-header">
-      <div class="results-title">YOUR PHOTOS</div>
+      <div class="results-title">Your Photos</div>
       <div class="results-count" id="resultsCount">0 found</div>
     </div>
     <div class="photo-grid" id="photoGrid"></div>
-    <button class="search-again-btn" onclick="resetSearch()">↺ Search Again</button>
+    <button class="again-btn" onclick="resetAll()">↺ Search Again</button>
   </div>
-
-  <!-- No Results -->
   <div class="no-results" id="noResults">
     <div class="no-results-icon">🔍</div>
-    <h3>NO PHOTOS FOUND</h3>
+    <h3>No Photos Found</h3>
     <p>We couldn't find any photos of you yet.<br>Check back later as more photos get uploaded!</p>
-    <button class="search-again-btn" onclick="resetSearch()">↺ Try Again</button>
+    <button class="again-btn" onclick="resetAll()">↺ Try Again</button>
   </div>
 </div>
-
 <script>
   const API_BASE = 'https://4e63fpyxvl.execute-api.ap-south-1.amazonaws.com/default';
   let selectedImageBase64 = null;
-
-  function triggerCamera() {
-    document.getElementById('fileInput').click();
-  }
-
+  function openCamera() { document.getElementById('cameraInput').click(); }
+  function openGallery() { document.getElementById('galleryInput').click(); }
   function handlePhoto(event) {
     const file = event.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
-      const dataUrl = e.target.result;
-      selectedImageBase64 = dataUrl.split(',')[1];
-
-      const preview = document.getElementById('preview');
-      preview.src = dataUrl;
-      preview.style.display = 'block';
-
-      document.getElementById('cameraPlaceholder').style.display = 'none';
-      document.getElementById('retakeBtn').style.display = 'block';
-      document.getElementById('cameraBox').classList.add('has-photo');
-      document.getElementById('searchBtn').disabled = false;
+      selectedImageBase64 = e.target.result.split(',')[1];
+      document.getElementById('preview').src = e.target.result;
+      document.getElementById('preview-box').style.display = 'block';
+      document.getElementById('btnGroup').style.display = 'none';
+      document.getElementById('searchBtn').style.display = 'block';
       hideError();
     };
     reader.readAsDataURL(file);
   }
-
-  function retakePhoto(e) {
-    e.stopPropagation();
+  function resetPhoto() {
     selectedImageBase64 = null;
-    document.getElementById('preview').style.display = 'none';
-    document.getElementById('preview').src = '';
-    document.getElementById('cameraPlaceholder').style.display = 'flex';
-    document.getElementById('retakeBtn').style.display = 'none';
-    document.getElementById('cameraBox').classList.remove('has-photo');
-    document.getElementById('searchBtn').disabled = true;
-    document.getElementById('fileInput').value = '';
+    document.getElementById('preview-box').style.display = 'none';
+    document.getElementById('btnGroup').style.display = 'flex';
+    document.getElementById('searchBtn').style.display = 'none';
+    document.getElementById('cameraInput').value = '';
+    document.getElementById('galleryInput').value = '';
     hideError();
   }
-
   async function searchPhotos() {
     if (!selectedImageBase64) return;
-
-    showLoading();
+    document.getElementById('mainSection').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
     hideError();
-
     try {
-      const response = await fetch(`${API_BASE}/search`, {
+      const response = await fetch(API_BASE + '/search-by-face', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image_base64: selectedImageBase64 })
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
-      }
-
-      hideLoading();
-
+      if (!response.ok) throw new Error(data.error || 'Something went wrong');
+      document.getElementById('loading').style.display = 'none';
       if (!data.found || data.photos.length === 0) {
-        showNoResults();
+        document.getElementById('noResults').style.display = 'block';
       } else {
         showResults(data.photos);
       }
-
     } catch (err) {
-      hideLoading();
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('mainSection').style.display = 'block';
       showError(err.message || 'Could not connect. Please try again.');
     }
   }
-
   function showResults(photos) {
-    document.getElementById('selfieSection').style.display = 'none';
     document.getElementById('results').style.display = 'block';
-    document.getElementById('resultsCount').textContent = `${photos.length} found`;
-
+    document.getElementById('resultsCount').textContent = photos.length + ' found';
     const grid = document.getElementById('photoGrid');
     grid.innerHTML = '';
-
-    photos.forEach((photo, index) => {
+    photos.forEach((photo, i) => {
       const card = document.createElement('div');
       card.className = 'photo-card';
-      card.style.animationDelay = `${index * 0.07}s`;
-
-      const displayUrl = photo.display_url || photo.thumbnail_url;
-
-      card.innerHTML = `
-        <img src="${displayUrl}" alt="Your photo" loading="lazy" onerror="this.style.background='#1a1a2e';this.style.minHeight='150px'">
-        <div class="photo-card-footer">
-          <button class="download-btn" onclick="downloadPhoto(this, '${photo.original_key}', '${photo.photo_id}')">
-            ⬇ Download
-          </button>
-        </div>
-      `;
+      card.style.animationDelay = (i * 0.07) + 's';
+      const url = photo.display_url || photo.thumbnail_url;
+      card.innerHTML = '<img src="' + url + '" alt="photo" loading="lazy"><div class="photo-card-footer"><button class="download-btn" onclick="downloadPhoto(this,\'' + photo.original_key + '\')">⬇ Download</button></div>';
       grid.appendChild(card);
     });
   }
-
-  async function downloadPhoto(btn, originalKey, photoId) {
-    btn.classList.add('downloading');
+  async function downloadPhoto(btn, originalKey) {
     btn.textContent = '⏳ Getting link...';
-
+    btn.disabled = true;
     try {
-      const response = await fetch(`${API_BASE}/download`, {
+      const res = await fetch(API_BASE + '/get-download-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ original_key: originalKey })
       });
-
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error);
-
-      // Trigger download
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
       const a = document.createElement('a');
       a.href = data.download_url;
       a.download = data.filename || 'anveshan-photo.jpg';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-
-      btn.classList.remove('downloading');
       btn.classList.add('done');
       btn.textContent = '✓ Downloaded';
-
     } catch (err) {
-      btn.classList.remove('downloading');
       btn.textContent = '⬇ Download';
+      btn.disabled = false;
       alert('Could not download. Please try again.');
     }
   }
-
-  function showNoResults() {
-    document.getElementById('selfieSection').style.display = 'none';
-    document.getElementById('noResults').style.display = 'block';
-  }
-
-  function resetSearch() {
+  function resetAll() {
     document.getElementById('results').style.display = 'none';
     document.getElementById('noResults').style.display = 'none';
-    document.getElementById('selfieSection').style.display = 'block';
-    retakePhoto({ stopPropagation: () => {} });
+    document.getElementById('mainSection').style.display = 'block';
+    resetPhoto();
   }
-
-  function showLoading() {
-    document.getElementById('selfieSection').style.display = 'none';
-    document.getElementById('loading').style.display = 'block';
-  }
-
-  function hideLoading() {
-    document.getElementById('loading').style.display = 'none';
-  }
-
   function showError(msg) {
-    document.getElementById('selfieSection').style.display = 'block';
     const el = document.getElementById('errorMsg');
     el.textContent = msg;
     el.style.display = 'block';
   }
-
-  function hideError() {
-    document.getElementById('errorMsg').style.display = 'none';
-  }
+  function hideError() { document.getElementById('errorMsg').style.display = 'none'; }
 </script>
 </body>
 </html>
+EOF
+aws s3 cp /tmp/index.html s3://anveshan-photos-compressed/index.html --content-type "text/html" --region ap-south-1
