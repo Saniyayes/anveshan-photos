@@ -140,6 +140,7 @@
   }
   async function searchPhotos() {
     if (!selectedImageBase64) return;
+    console.log('Image size:', selectedImageBase64.length, 'bytes');
     document.getElementById('mainSection').style.display = 'none';
     document.getElementById('loading').style.display = 'block';
     hideError();
