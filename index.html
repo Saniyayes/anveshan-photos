@@ -106,28 +106,26 @@
   function handlePhoto(event) {
     const file = event.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxSize = 600;
-        let w = img.width, h = img.height;
-        if (w > h) { if (w > maxSize) { h = h * maxSize / w; w = maxSize; } }
-        else { if (h > maxSize) { w = w * maxSize / h; h = maxSize; } }
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        selectedImageBase64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-        document.getElementById('preview').src = canvas.toDataURL('image/jpeg', 0.7);
-        document.getElementById('preview-box').style.display = 'block';
-        document.getElementById('btnGroup').style.display = 'none';
-        document.getElementById('searchBtn').style.display = 'block';
-        hideError();
-      };
-      img.src = e.target.result;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 400;
+      const ctx = canvas.getContext('2d');
+      const size = Math.min(img.width, img.height);
+      const x = (img.width - size) / 2;
+      const y = (img.height - size) / 2;
+      ctx.drawImage(img, x, y, size, size, 0, 0, 400, 400);
+      selectedImageBase64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+      document.getElementById('preview').src = canvas.toDataURL('image/jpeg', 0.6);
+      document.getElementById('preview-box').style.display = 'block';
+      document.getElementById('btnGroup').style.display = 'none';
+      document.getElementById('searchBtn').style.display = 'block';
+      hideError();
+      URL.revokeObjectURL(url);
     };
-    reader.readAsDataURL(file);
+    img.src = url;
   }
   function resetPhoto() {
     selectedImageBase64 = null;
