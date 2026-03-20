@@ -139,6 +139,7 @@
   async function searchPhotos() {
     const controller = new AbortController();
 const timeout = setTimeout(() => controller.abort(), 25000);
+alert('Sending ' + Math.round(selectedImageBase64.length/1024) + ' KB');
 const response = await fetch(API_BASE + '/search-by-face', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
