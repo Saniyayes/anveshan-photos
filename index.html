@@ -137,6 +137,15 @@
     hideError();
   }
   async function searchPhotos() {
+    const controller = new AbortController();
+const timeout = setTimeout(() => controller.abort(), 25000);
+const response = await fetch(API_BASE + '/search-by-face', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image_base64: selectedImageBase64 }),
+    signal: controller.signal
+});
+clearTimeout(timeout);
     if (!selectedImageBase64) return;
     console.log('Image size:', selectedImageBase64.length, 'bytes');
     document.getElementById('mainSection').style.display = 'none';
@@ -161,6 +170,7 @@
       document.getElementById('mainSection').style.display = 'block';
       showError(err.message || 'Could not connect. Please try again.');
     }
+    
   }
   function showResults(photos) {
     document.getElementById('results').style.display = 'block';
