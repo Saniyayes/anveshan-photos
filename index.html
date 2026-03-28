@@ -176,10 +176,11 @@
       } else {
         showResults(data.photos);
       }
-    } catch (err) {
+    } 
+  catch (err) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('mainSection').style.display = 'block';
-      showError(err.name + ': ' + err.message);
+      alert('Step failed: ' + err.name + ' - ' + err.message + ' - ' + (err.stack || ''));
     }
   }
 
