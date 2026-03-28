@@ -136,30 +136,41 @@
     document.getElementById('galleryInput').value = '';
     hideError();
   }
-  async function searchPhotos() {
-    const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 25000);
-alert('Sending ' + Math.round(selectedImageBase64.length/1024) + ' KB');
-const response = await fetch(API_BASE + '/search-by-face', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  nt-Type': 'application/json' },
     body: JSON.stringify({ image_base64: selectedImageBase64 }),
     signal: controller.signal
 });
-clearTimeout(timeout);
+async function searchPhotos() {
     if (!selectedImageBase64) return;
-    console.log('Image size:', selectedImageBase64.length, 'bytes');
     document.getElementById('mainSection').style.display = 'none';
     document.getElementById('loading').style.display = 'block';
     hideError();
     try {
-      const response = await fetch(API_BASE + '/search-by-face', {
+      // Step 1 — Get presigned upload URL
+      const urlRes = await fetch(API_BASE + '/get-upload-lambda', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image_base64: selectedImageBase64 })
+        body: JSON.stringify({})
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Something went wrong');
+      const urlData = await urlRes.json();
+      const { upload_url, selfie_key } = urlData;
+
+      // Step 2 — Upload selfie directly to S3
+      const imageBlob = await fetch('data:image/jpeg;base64,' + selectedImageBase64).then(r => r.blob());
+      await fetch(upload_url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'image/jpeg' },
+        body: imageBlob
+      });
+
+      // Step 3 — Search by face using S3 key
+      const searchRes = await fetch(API_BASE + '/search-by-face', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selfie_key: selfie_key })
+      });
+      const data = await searchRes.json();
+
       document.getElementById('loading').style.display = 'none';
       if (!data.found || data.photos.length === 0) {
         document.getElementById('noResults').style.display = 'block';
@@ -169,9 +180,8 @@ clearTimeout(timeout);
     } catch (err) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('mainSection').style.display = 'block';
-      showError(err.message || 'Could not connect. Please try again.');
+      showError(err.name + ': ' + err.message);
     }
-    
   }
   function showResults(photos) {
     document.getElementById('results').style.display = 'block';
