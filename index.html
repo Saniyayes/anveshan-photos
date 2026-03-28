@@ -156,6 +156,9 @@
 
       // Step 2 - Upload selfie directly to S3
       const imageBlob = await fetch('data:image/jpeg;base64,' + selectedImageBase64).then(r => r.blob());
+       
+      alert('Uploading to: ' + upload_url.substring(0, 80));
+const uploadRes = await fetch(upload_url, {
       const uploadRes = await fetch(upload_url, {
   method: 'PUT',
   body: imageBlob
@@ -180,7 +183,7 @@ if (!uploadRes.ok) throw new Error('S3 upload failed: ' + uploadRes.status);
   catch (err) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('mainSection').style.display = 'block';
-      alert('Step failed: ' + err.name + ' - ' + err.message + ' - ' + (err.stack || ''));
+     alert('Line: ' + (err.stack || '').split('\n')[1] + '\nError: ' + err.message);
     }
   }
 
