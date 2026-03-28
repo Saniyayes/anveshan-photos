@@ -156,11 +156,11 @@
 
       // Step 2 - Upload selfie directly to S3
       const imageBlob = await fetch('data:image/jpeg;base64,' + selectedImageBase64).then(r => r.blob());
-      await fetch(upload_url, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'image/jpeg' },
-        body: imageBlob
-      });
+      const uploadRes = await fetch(upload_url, {
+  method: 'PUT',
+  body: imageBlob
+});
+if (!uploadRes.ok) throw new Error('S3 upload failed: ' + uploadRes.status);
 
       // Step 3 - Search by face using S3 key
       const searchRes = await fetch(API_BASE + '/search-by-face', {
