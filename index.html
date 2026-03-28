@@ -21,4 +21,225 @@
   #preview-box { display: none; margin: 0 0 16px; border-radius: 20px; overflow: hidden; border: 2px solid var(--accent); position: relative; }
   #preview-box img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
   .retake { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
-  .search-btn { width: 100%; padding: 18px;
+  .search-btn { width: 100%; padding: 18px; background: var(--accent); color: white; border: none; border-radius: 16px; font-size: 18px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; display: none; margin-bottom: 12px; }
+  .loading { display: none; text-align: center; padding: 48px 0; }
+  .spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--muted); font-size: 14px; line-height: 1.8; }
+  #results { display: none; }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .results-title { font-size: 22px; font-weight: 800; }
+  .results-count { background: rgba(255,107,43,0.15); color: var(--accent); font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); }
+  .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .photo-card { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); animation: fadeUp 0.4s ease forwards; opacity: 0; transform: translateY(16px); }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .photo-card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #1a1a2e; min-height: 150px; }
+  .photo-card-footer { padding: 10px; }
+  .download-btn { width: 100%; padding: 9px; background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 10px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .download-btn.done { background: rgba(45,189,110,0.1); border-color: var(--success); color: var(--success); }
+  .no-results { text-align: center; padding: 48px 0; display: none; }
+  .no-results-icon { font-size: 48px; margin-bottom: 16px; }
+  .no-results h3 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+  .no-results p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .error-msg { background: rgba(255,60,60,0.1); border: 1px solid rgba(255,60,60,0.3); color: #ff6060; padding: 14px; border-radius: 12px; font-size: 14px; margin-top: 12px; display: none; }
+  .again-btn { width: 100%; padding: 14px; background: transparent; border: 1.5px solid var(--border); color: var(--text); border-radius: 16px; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 24px; }
+  .tips { margin-top: 24px; padding: 20px; background: var(--card); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); }
+  .tips-title { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .tips li { font-size: 13px; color: var(--muted); margin-bottom: 8px; padding-left: 16px; position: relative; line-height: 1.5; list-style: none; }
+  .tips li::before { content: '→'; color: var(--accent); position: absolute; left: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="fest-tag">JSS CSE · Anveshan 2026</div>
+    <h1>Find Your<br><span>Photos</span></h1>
+    <p class="subtitle">Take a selfie and we'll find all your photos from the fest instantly</p>
+  </header>
+  <div id="mainSection">
+    <div id="preview-box">
+      <img id="preview" alt="Your photo">
+      <button class="retake" onclick="resetPhoto()">↺ Retake</button>
+    </div>
+    <div class="btn-group" id="btnGroup">
+      <button class="cam-btn primary" onclick="openCamera()">📸 Open Camera</button>
+      <button class="cam-btn secondary" onclick="openGallery()">🖼 Choose from Gallery</button>
+    </div>
+    <button class="search-btn" id="searchBtn" onclick="searchPhotos()">🔍 Find My Photos</button>
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="tips">
+      <div class="tips-title">Tips for best results</div>
+      <ul>
+        <li>Face should be clearly visible</li>
+        <li>Good lighting works best</li>
+        <li>Look directly at the camera</li>
+      </ul>
+    </div>
+  </div>
+  <input type="file" id="cameraInput" accept="image/*" capture="user" style="display:none" onchange="handlePhoto(event)">
+  <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Searching through fest photos...<br><span style="color:var(--accent);font-weight:600">This may take a few seconds</span></div>
+  </div>
+  <div id="results">
+    <div class="results-header">
+      <div class="results-title">Your Photos</div>
+      <div class="results-count" id="resultsCount">0 found</div>
+    </div>
+    <div class="photo-grid" id="photoGrid"></div>
+    <button class="again-btn" onclick="resetAll()">↺ Search Again</button>
+  </div>
+  <div class="no-results" id="noResults">
+    <div class="no-results-icon">🔍</div>
+    <h3>No Photos Found</h3>
+    <p>We couldn't find any photos of you yet.<br>Check back later as more photos get uploaded!</p>
+    <button class="again-btn" onclick="resetAll()">↺ Try Again</button>
+  </div>
+</div>
+<script>
+  const API_BASE = 'https://4e63fpyxvl.execute-api.ap-south-1.amazonaws.com/default';
+  let selectedImageBase64 = null;
+
+  function openCamera() { document.getElementById('cameraInput').click(); }
+  function openGallery() { document.getElementById('galleryInput').click(); }
+
+  function handlePhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 400;
+      const ctx = canvas.getContext('2d');
+      const size = Math.min(img.width, img.height);
+      const x = (img.width - size) / 2;
+      const y = (img.height - size) / 2;
+      ctx.drawImage(img, x, y, size, size, 0, 0, 400, 400);
+      selectedImageBase64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+      document.getElementById('preview').src = canvas.toDataURL('image/jpeg', 0.6);
+      document.getElementById('preview-box').style.display = 'block';
+      document.getElementById('btnGroup').style.display = 'none';
+      document.getElementById('searchBtn').style.display = 'block';
+      hideError();
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+
+  function resetPhoto() {
+    selectedImageBase64 = null;
+    document.getElementById('preview-box').style.display = 'none';
+    document.getElementById('btnGroup').style.display = 'flex';
+    document.getElementById('searchBtn').style.display = 'none';
+    document.getElementById('cameraInput').value = '';
+    document.getElementById('galleryInput').value = '';
+    hideError();
+  }
+
+  async function searchPhotos() {
+    if (!selectedImageBase64) return;
+    document.getElementById('mainSection').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    hideError();
+    try {
+      // Step 1 - Get presigned upload URL
+      const urlRes = await fetch(API_BASE + '/get-upload-lambda', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const urlData = await urlRes.json();
+      const { upload_url, selfie_key } = urlData;
+      showError('Got URL, uploading selfie...');
+
+      // Step 2 - Upload selfie directly to S3
+      const imageBlob = await fetch('data:image/jpeg;base64,' + selectedImageBase64).then(r => r.blob());
+      const uploadRes = await fetch(upload_url, {
+        method: 'PUT',
+        body: imageBlob
+      });
+      showError('Uploaded! Status: ' + uploadRes.status + ' Searching...');
+
+      // Step 3 - Search by face using S3 key
+      const searchRes = await fetch(API_BASE + '/search-by-face', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selfie_key: selfie_key })
+      });
+      const data = await searchRes.json();
+
+      document.getElementById('loading').style.display = 'none';
+      hideError();
+      if (!data.found || data.photos.length === 0) {
+        document.getElementById('noResults').style.display = 'block';
+      } else {
+        showResults(data.photos);
+      }
+    } catch (err) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('mainSection').style.display = 'block';
+      showError('Failed at: ' + err.message);
+    }
+  }
+
+  function showResults(photos) {
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('resultsCount').textContent = photos.length + ' found';
+    const grid = document.getElementById('photoGrid');
+    grid.innerHTML = '';
+    photos.forEach((photo, i) => {
+      const card = document.createElement('div');
+      card.className = 'photo-card';
+      card.style.animationDelay = (i * 0.07) + 's';
+      const url = photo.display_url || photo.thumbnail_url;
+      card.innerHTML = '<img src="' + url + '" alt="photo" loading="lazy"><div class="photo-card-footer"><button class="download-btn" onclick="downloadPhoto(this,\'' + photo.original_key + '\')">⬇ Download</button></div>';
+      grid.appendChild(card);
+    });
+  }
+
+  async function downloadPhoto(btn, originalKey) {
+    btn.textContent = '⏳ Getting link...';
+    btn.disabled = true;
+    try {
+      const res = await fetch(API_BASE + '/get-download-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ original_key: originalKey })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const a = document.createElement('a');
+      a.href = data.download_url;
+      a.download = data.filename || 'anveshan-photo.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      btn.classList.add('done');
+      btn.textContent = '✓ Downloaded';
+    } catch (err) {
+      btn.textContent = '⬇ Download';
+      btn.disabled = false;
+      alert('Could not download. Please try again.');
+    }
+  }
+
+  function resetAll() {
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('noResults').style.display = 'none';
+    document.getElementById('mainSection').style.display = 'block';
+    resetPhoto();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideError() { document.getElementById('errorMsg').style.display = 'none'; }
+</script>
+</body>
+</html>
