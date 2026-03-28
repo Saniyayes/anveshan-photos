@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,8 +100,10 @@
 <script>
   const API_BASE = 'https://4e63fpyxvl.execute-api.ap-south-1.amazonaws.com/default';
   let selectedImageBase64 = null;
+
   function openCamera() { document.getElementById('cameraInput').click(); }
   function openGallery() { document.getElementById('galleryInput').click(); }
+
   function handlePhoto(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -127,6 +128,7 @@
     };
     img.src = url;
   }
+
   function resetPhoto() {
     selectedImageBase64 = null;
     document.getElementById('preview-box').style.display = 'none';
@@ -136,17 +138,14 @@
     document.getElementById('galleryInput').value = '';
     hideError();
   }
-  nt-Type': 'application/json' },
-    body: JSON.stringify({ image_base64: selectedImageBase64 }),
-    signal: controller.signal
-});
-async function searchPhotos() {
+
+  async function searchPhotos() {
     if (!selectedImageBase64) return;
     document.getElementById('mainSection').style.display = 'none';
     document.getElementById('loading').style.display = 'block';
     hideError();
     try {
-      // Step 1 — Get presigned upload URL
+      // Step 1 - Get presigned upload URL
       const urlRes = await fetch(API_BASE + '/get-upload-lambda', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -155,7 +154,7 @@ async function searchPhotos() {
       const urlData = await urlRes.json();
       const { upload_url, selfie_key } = urlData;
 
-      // Step 2 — Upload selfie directly to S3
+      // Step 2 - Upload selfie directly to S3
       const imageBlob = await fetch('data:image/jpeg;base64,' + selectedImageBase64).then(r => r.blob());
       await fetch(upload_url, {
         method: 'PUT',
@@ -163,7 +162,7 @@ async function searchPhotos() {
         body: imageBlob
       });
 
-      // Step 3 — Search by face using S3 key
+      // Step 3 - Search by face using S3 key
       const searchRes = await fetch(API_BASE + '/search-by-face', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -183,6 +182,7 @@ async function searchPhotos() {
       showError(err.name + ': ' + err.message);
     }
   }
+
   function showResults(photos) {
     document.getElementById('results').style.display = 'block';
     document.getElementById('resultsCount').textContent = photos.length + ' found';
@@ -197,6 +197,7 @@ async function searchPhotos() {
       grid.appendChild(card);
     });
   }
+
   async function downloadPhoto(btn, originalKey) {
     btn.textContent = '⏳ Getting link...';
     btn.disabled = true;
@@ -222,17 +223,20 @@ async function searchPhotos() {
       alert('Could not download. Please try again.');
     }
   }
+
   function resetAll() {
     document.getElementById('results').style.display = 'none';
     document.getElementById('noResults').style.display = 'none';
     document.getElementById('mainSection').style.display = 'block';
     resetPhoto();
   }
+
   function showError(msg) {
     const el = document.getElementById('errorMsg');
     el.textContent = msg;
     el.style.display = 'block';
   }
+
   function hideError() { document.getElementById('errorMsg').style.display = 'none'; }
 </script>
 </body>
